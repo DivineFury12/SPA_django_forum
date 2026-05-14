@@ -1,0 +1,125 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>django Документация</title>
+  <link rel="stylesheet" href="{% static 'css/simple.css' %}">
+  <link rel="stylesheet" href="{% static 'css/forum.css' %}">
+  <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+</head>
+<body>
+
+  {% include 'includes/header.html' %}
+
+  <section class="forum-container">
+    <div class="container">
+
+
+      <!-- Posts list -->
+      {% for post in posts %}
+        <div class="topic-card" id="post-{{ post.id }}">
+
+          <!-- View mode -->
+          <div id="view-{{ post.id }}">
+            <div class="topic-meta">
+              <h3>{{ post.name }}</h3>
+              <span>Автор: <strong>{{ post.author }}</strong></span>
+              <span style="margin-left: 12px; color: #888; font-size: 13px;">{{ post.created_at }}</span>
+            </div>
+            <p>{{ post.description }}</p>
+            {% if post.code %}
+              <a href="{{ post.code }}" target="_blank" style="font-size: 13px;">📎 Скачать .py файл</a>
+            {% endif %}
+
+            <!-- CRUD buttons (author or admin) -->
+            {% if user.is_authenticated %}
+              {% if user.username == post.author or user.is_staff %}
+                <div class="form-actions" style="margin-top: 10px;">
+                  <button class="submit-btn"
+                          onclick="toggleForm('edit-{{ post.id }}'); toggleForm('view-{{ post.id }}')"
+                          style="background: #ffc107; color: #000;">
+                    Редактировать
+                  </button>
+                  <form method="post" action="{% url 'docs:post_delete' post.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="cancel-btn"
+                            onclick="return confirm('Удалить пост?')">
+                      Удалить
+                    </button>
+                  </form>
+                </div>
+              {% endif %}
+            {% endif %}
+          </div>
+
+          <!-- Edit mode (hidden by default) -->
+          {% if user.is_authenticated %}
+            {% if user.username == post.author or user.is_staff %}
+              <div id="edit-{{ post.id }}" style="display: none;">
+                <form method="post" action="{% url 'docs:post_edit' post.id %}" enctype="multipart/form-data">
+                  {% csrf_token %}
+
+                  {% if edit_post_id == post.id %}
+                    <!-- Show edit form with current data -->
+                    {{ edit_form.as_p }}
+                  {% else %}
+                    <!-- Pre-fill with current values -->
+                    <div class="form-group">
+                      <label>Заголовок:</label>
+                      <input type="text" name="name" value="{{ post.name }}" class="form-control">
+                    </div>
+                    <div class="form-group">
+                      <label>Описание:</label>
+                      <textarea name="description" class="form-control" rows="4">{{ post.description }}</textarea>
+                    </div>
+                    <div class="form-group">
+                      <label>Новый .py файл (необязательно):</label>
+                      <input type="file" name="code" accept=".py" class="form-control">
+                    </div>
+                  {% endif %}
+
+                  <div class="form-actions">
+                    <button type="submit" class="submit-btn">Сохранить</button>
+                    <button type="button" class="cancel-btn"
+                            onclick="toggleForm('edit-{{ post.id }}'); toggleForm('view-{{ post.id }}')">
+                      Отмена
+                    </button>
+                  </div>
+                </form>
+              </div>
+            {% endif %}
+          {% endif %}
+
+        </div>
+      {% empty %}
+        <p style="color: #888;">Постов пока нет.</p>
+      {% endfor %}
+
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 django.</p>
+    </div>
+  </footer>
+
+  <script>
+    function toggleForm(id) {
+      const el = document.getElementById(id);
+      if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // If page returned with edit errors, reopen the edit form automatically
+    {% if edit_post_id %}
+      document.addEventListener('DOMContentLoaded', () => {
+        toggleForm('edit-{{ edit_post_id }}');
+        toggleForm('view-{{ edit_post_id }}');
+      });
+    {% endif %}
+  </script>
+
+</body>
+</html>

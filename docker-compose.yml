@@ -1,0 +1,80 @@
+# объявляем сервисы в докер-сети
+services:
+    # контейнер с БД (постгрес)
+  postgres:
+    # берём официальный образ postgres 17 с dockerhub
+    image: postgres:17-alpine
+    container_name: django_postgres
+    # Задаём переменные окружения
+    env_file:
+      - .env
+    # пробрасываем порты: хост:5433 → контейнер:5432
+    ports:
+      - "5433:5432"
+    # создаём том для хранения данных БД (чтобы данные не терялись при перезапуске контейнера)
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # проверяем, запустился ли контейнер с постгресом через healthcheck
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    # подключаем контейнер к докер-сети 
+    networks:
+      - app_network
+
+  # контейнер приложения
+  app:
+    # указываем контекст сборки
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: django_app
+    # Пробрасываем порты (8080 порт на локалхосте будет направлен на 8000 порт контейнера
+    ports:
+      - "8080:8000"
+    # Указываем файл с переменными окружения
+    env_file:
+      - .env
+    # монтируем необходимые файлы проекта в контейнер
+    volumes:
+      - ./src:/app/src
+      - ./pyproject.toml:/app/pyproject.toml
+    # дожидаемся пока поднимется постгрес во избежание ошибок подключения
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # подключаем контейнер с приложением к докер-сети
+    networks:
+      - app_network
+    # Указываем текущую директорию для выполнения команд
+    working_dir: /app/src
+    # Запускаем приложение
+    command: python manage.py runserver 0.0.0.0:8000
+
+  # контейнер с vue
+  frontend:
+    # Указываем контекст сборки
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: vue_frontend
+    # Пробрасываем порты: хост:80 -> контейнер:80
+    ports:
+      - "80:80"
+    # указываем порядок запуска контейнеров
+    depends_on:
+      - app
+    # подключаем фротненд к докер-сети
+    networks:
+      - app_network
+
+# создаём именованный том для данных PostgreSQL (чтобы они сохранялись между запусками)
+volumes:
+  postgres_data:
+
+# объявляем докер-сеть 
+networks:
+  app_network:
+    driver: bridge

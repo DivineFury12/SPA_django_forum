@@ -1,0 +1,38 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>django</title>
+    <link rel="stylesheet" href="{% static "css/simple.css" %}">
+    <link rel="stylesheet" href="{% static "css/responsive.css" %}">
+</head>
+<body>
+    {% include "includes/header.html" %}
+    <section id="portfolio" class="portfolio-section">
+        <div class="container">
+            <div class="portfolio-header">
+                <h2>Компании, которые используют django</h2>
+            </div>
+            <div class="portfolio-grid">
+                <div class="portfolio-item">
+                    <img src={% static "img/google.jpg" %} alt="Project 1">
+                </div>
+                <div class="portfolio-item">
+                    <img src={% static "img/2024-spotify-brand-assets-media-kit.jpg" %} alt="Project 2">
+                </div>
+                <div class="portfolio-item">
+                    <img src={% static "img/openart-image_DsdbMeYk_1740823153253_raw.jpg" %} alt="Project 3">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 django.</p>
+        </div>
+    </footer>
+</body>
+</html> 

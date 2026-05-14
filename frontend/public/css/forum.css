@@ -1,0 +1,141 @@
+.forum-container {
+    padding: 2rem 0;
+}
+
+.forum-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.forum-topics {
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.topic {
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.topic:last-child {
+    border-bottom: none;
+}
+
+.topic:hover {
+    background-color: #f8f9fa;
+}
+
+.topic-title {
+    font-weight: 500;
+}
+
+.topic-meta {
+    color: #777;
+    font-size: 0.9rem;
+}
+
+.new-topic-btn {
+    display: inline-block;
+    background-color: #f5f8e9;
+    color: #333;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    text-decoration: none;
+    margin-bottom: 1.5rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+}
+
+.new-topic-btn:hover {
+    background-color: #e7eadc;
+}
+
+/* Topic Form Styles */
+.topic-form {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border: 1px solid #eee;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 1rem;
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.submit-btn {
+    background-color: #f5f8e9;
+    color: #333;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    border: none;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.submit-btn:hover {
+    background-color: #e7eadc;
+}
+
+.cancel-btn {
+    background-color: #f1f1f1;
+    color: #555;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    border: none;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.cancel-btn:hover {
+    background-color: #e5e5e5;
+}
+
+.alt-form-link {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.alt-form-link a {
+    color: #555;
+    text-decoration: none;
+}
+
+.alt-form-link a:hover {
+    text-decoration: underline;
+} 
