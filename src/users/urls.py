@@ -17,4 +17,5 @@ urlpatterns = [
         name='logout',
     ),
     django.urls.path('auth/register/', users.api_views.RegisterController.as_view(), name='api_register'),
+    django.urls.path('profile/', users.api_views.ProfileController.as_view(), name='profile'),
 ]

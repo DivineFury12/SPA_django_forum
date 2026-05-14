@@ -156,3 +156,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DMR_SETTINGS = {
     'validate_responses': True,
 }
+
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost',
+    'http://localhost:5173',
+]

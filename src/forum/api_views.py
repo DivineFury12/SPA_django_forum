@@ -47,7 +47,7 @@ class PostListController(dmr.Controller[dmr.plugins.pydantic.PydanticSerializer]
 
     def get(self) -> list[forum.schemas.PostSchema]:
         """List all posts."""
-        posts = forum.models.Posts.objects.select_related('author').prefetch_related('tags').all()
+        posts = forum.models.Posts.objects.select_related('author', 'author__profile').prefetch_related('tags').all()
         return [
             forum.schemas.PostSchema(
                 id=p.id,
@@ -57,6 +57,8 @@ class PostListController(dmr.Controller[dmr.plugins.pydantic.PydanticSerializer]
                 author=p.author.username,
                 tags=[forum.schemas.TagSchema(id=t.id, name=t.name) for t in p.tags.all()],
                 created_at=p.created_at,
+                author_nickname=p.author.profile.nickname,
+                author_avatar=p.author.profile.avatar.url if p.author.profile.avatar else None,
             )
             for p in posts
         ]
@@ -110,6 +112,8 @@ class PostListController(dmr.Controller[dmr.plugins.pydantic.PydanticSerializer]
             author=post.author.username,
             tags=[forum.schemas.TagSchema(id=t.id, name=t.name) for t in post.tags.all()],
             created_at=post.created_at,
+            author_nickname=post.author.profile.nickname,
+            author_avatar=post.author.profile.avatar.url if post.author.profile.avatar else None,
         )
 
 
@@ -134,6 +138,8 @@ class PostDetailController(dmr.Controller[dmr.plugins.pydantic.PydanticSerialize
             author=post.author.username,
             tags=[forum.schemas.TagSchema(id=t.id, name=t.name) for t in post.tags.all()],
             created_at=post.created_at,
+            author_nickname=post.author.profile.nickname,
+            author_avatar=post.author.profile.avatar.url if post.author.profile.avatar else None,
         )
 
     @dmr.endpoint.modify(
@@ -184,6 +190,8 @@ class PostDetailController(dmr.Controller[dmr.plugins.pydantic.PydanticSerialize
             author=post.author.username,
             tags=[forum.schemas.TagSchema(id=t.id, name=t.name) for t in post.tags.all()],
             created_at=post.created_at,
+            author_nickname=post.author.profile.nickname,
+            author_avatar=post.author.profile.avatar.url if post.author.profile.avatar else None,
         )
         
     def delete(self) -> None:

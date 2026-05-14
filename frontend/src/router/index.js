@@ -15,6 +15,7 @@ const routes = [
   { path: '/register', component: RegisterPage },
 
   { path: '/docs', component: DocsPage, meta: { requiresAuth: true } },
+  { path: '/profile', component: () => import('@/views/ProfilePage.vue'), meta: { requiresAuth: true } }
 ]
 
 const router = createRouter({

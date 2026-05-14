@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { login, register } from '@/api/auth'
 import api from '@/api/index'
+import { getProfile } from '@/api/profile'
 
 function parseJwt(token) {
   const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
@@ -9,10 +10,14 @@ function parseJwt(token) {
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    username:    localStorage.getItem('username') || null,
-    accessToken: localStorage.getItem('access_token') || null,
-    isStaff:     localStorage.getItem('is_staff') === 'true',
-  }),
+  username:    localStorage.getItem('username')    || null,
+  accessToken: localStorage.getItem('access_token') || null,
+  isStaff:     localStorage.getItem('is_staff') === 'true',
+  nickname:    localStorage.getItem('nickname')    || null,  // ← add
+  avatar:      localStorage.getItem('avatar')      || null,  // ← add
+}),
+
+
 
   getters: {
     isAuthenticated: (state) => !!state.accessToken,
@@ -20,15 +25,44 @@ export const useAuthStore = defineStore('auth', {
 
   actions: {
     async login(username, password) {
-      const { data } = await login(username, password)
-      const payload = parseJwt(data.access)
-      this.accessToken = data.access
-      this.username    = payload.username
-      this.isStaff     = payload.is_staff
-      localStorage.setItem('access_token', data.access)
-      localStorage.setItem('refresh_token', data.refresh)
-      localStorage.setItem('username', payload.username)
-      localStorage.setItem('is_staff', payload.is_staff)
+      try {
+        const { data } = await login(username, password)
+        const payload  = parseJwt(data.access)
+
+        this.accessToken = data.access
+        this.username    = payload.username
+        this.isStaff     = payload.is_staff
+
+        localStorage.setItem('access_token', data.access)
+        localStorage.setItem('refresh_token', data.refresh)
+        localStorage.setItem('username', payload.username)
+        localStorage.setItem('is_staff', payload.is_staff)
+
+        await this.fetchProfile()  // ← likely throws here
+      } catch (e) {
+        console.error('Login error:', e)        // ← check browser console
+        console.error('Response:', e.response?.data)
+        throw e  // re-throw so LoginPage shows the error
+  }
+
+    },
+
+      // add fetchProfile action
+    async fetchProfile() {
+      try {
+        const { data } = await getProfile()
+        console.log('fetchProfile response:', data)
+        this.nickname = data.nickname
+        this.avatar   = data.avatar
+        localStorage.setItem('nickname', data.nickname || '')
+        localStorage.setItem('avatar',   data.avatar   || '')
+      } catch (e) {
+        console.error('fetchProfile failed:')
+        console.error('message:', e.message)        // ← actual error message
+        console.error('status:', e.response?.status) // ← HTTP status if any
+        console.error('data:', e.response?.data)
+        console.error('full error:', e)             // ← full object
+      }
     },
 
     async register(username, password) {

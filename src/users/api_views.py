@@ -1,6 +1,9 @@
 import datetime
+import json
 import http
+import io
 
+import django.http.multipartparser
 import dmr
 import dmr.endpoint
 import dmr.plugins.pydantic
@@ -11,6 +14,9 @@ import django.contrib.auth
 import django.contrib.auth.models
 import jwt
 import pydantic
+
+import users.schemas
+import forum.api_views
 
 
 class LoginSchema(pydantic.BaseModel):
@@ -105,3 +111,78 @@ class RegisterController(dmr.Controller[dmr.plugins.pydantic.PydanticSerializer]
             password=parsed_body.password,
         )
         return _create_tokens(user)
+
+
+class ProfileController(dmr.Controller[dmr.plugins.pydantic.PydanticSerializer]):
+
+    def _get_or_create_profile(self, user):
+        profile, _ = users.models.Profile.objects.get_or_create(user=user)
+        return profile
+
+    def _parse_multipart(self):
+        """Manually parse multipart data since Django skips it for PATCH."""
+        body_file = io.BytesIO(self.request.body)
+        parser    = django.http.multipartparser.MultiPartParser(
+            self.request.META,
+            body_file,
+            self.request.upload_handlers,
+            self.request.encoding,
+        )
+        post_data, file_data = parser.parse()
+        return post_data, file_data
+
+    @dmr.endpoint.modify(
+        extra_responses=[
+            dmr.metadata.ResponseSpec(return_type=dict, status_code=http.HTTPStatus.UNAUTHORIZED),
+        ],
+    )
+    def get(self) -> users.schemas.ProfileSchema:
+        user = forum.api_views.get_user_from_request(self.request)
+        if user is None:
+            raise dmr.response.APIError(
+                {'detail': 'Authentication required.'},
+                status_code=http.HTTPStatus.UNAUTHORIZED,
+            )
+        profile = self._get_or_create_profile(user)
+        return users.schemas.ProfileSchema(
+            username=user.username,
+            nickname=profile.nickname or '',
+            avatar=profile.avatar.url if profile.avatar else None,
+        )
+
+    @dmr.endpoint.modify(
+        extra_responses=[
+            dmr.metadata.ResponseSpec(return_type=dict, status_code=http.HTTPStatus.UNAUTHORIZED),
+        ],
+    )
+    def patch(self) -> users.schemas.ProfileSchema:
+        user = forum.api_views.get_user_from_request(self.request)
+        if user is None:
+            raise dmr.response.APIError(
+                {'detail': 'Authentication required.'},
+                status_code=http.HTTPStatus.UNAUTHORIZED,
+            )
+
+        profile = self._get_or_create_profile(user)
+
+        content_type = self.request.content_type or ''
+        if 'multipart' in content_type:
+            post_data, file_data = self._parse_multipart()
+            nickname = post_data.get('nickname', profile.nickname)
+            avatar   = file_data.get('avatar')
+            if avatar:
+                profile.avatar = avatar
+        else:
+            body     = json.loads(self.request.body)
+            nickname = body.get('nickname', profile.nickname)
+
+        profile.nickname = nickname
+        profile.save()
+
+        print(f'Saved: nickname={profile.nickname}, avatar={profile.avatar}')
+
+        return users.schemas.ProfileSchema(
+            username=user.username,
+            nickname=profile.nickname or '',
+            avatar=profile.avatar.url if profile.avatar else None,
+        )

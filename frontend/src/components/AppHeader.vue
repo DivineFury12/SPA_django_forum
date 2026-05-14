@@ -20,9 +20,13 @@
               <i class="ti ti-user" aria-hidden="true"></i>
               {{ auth.username }}
             </span>
+            <RouterLink to="/profile" class="auth-username">
+              <img v-if="auth.avatar" :src="auth.avatar" class="brand-img" />
+              <span v-else class="avatar-placeholder">{{ auth.username?.slice(0,2).toUpperCase() }}</span>
+              {{ auth.nickname || auth.username }}
+            </RouterLink>
             <button class="btn btn-logout" @click="handleLogout">
-              <i class="ti ti-logout" aria-hidden="true"></i>
-              Выйти
+              <i class="ti ti-logout" aria-hidden="true"></i> Выйти
             </button>
           </template>
           <template v-else>

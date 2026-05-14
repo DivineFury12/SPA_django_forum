@@ -26,7 +26,7 @@ urlpatterns = [
     django.urls.path('admin/',   django.contrib.admin.site.urls),
     django.urls.path('',         django.urls.include(homepage.urls)),
     django.urls.path('forum/',   django.urls.include(forum.urls)),
-    django.urls.path('users/',   django.urls.include(users.urls)),
+    # django.urls.path('users/',   django.urls.include(users.urls)),
 
     # API routes for Vue
     django.urls.path(router.prefix, django.urls.include((router.urls, 'api'), namespace='api')),
