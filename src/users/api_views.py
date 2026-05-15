@@ -13,28 +13,12 @@ import django.conf
 import django.contrib.auth
 import django.contrib.auth.models
 import jwt
-import pydantic
 
 import users.schemas
 import forum.api_views
 
 
-class LoginSchema(pydantic.BaseModel):
-    username: str
-    password: str
-
-
-class RegisterSchema(pydantic.BaseModel):
-    username: str
-    password: str
-
-
-class TokenSchema(pydantic.BaseModel):
-    access: str
-    refresh: str
-
-
-def _create_tokens(user) -> TokenSchema:
+def _create_tokens(user) -> users.schemas.TokenSchema:
     """Create JWT access and refresh tokens manually using pyjwt."""
     now = datetime.datetime.now(datetime.timezone.utc)
     secret = django.conf.settings.SECRET_KEY
@@ -52,7 +36,7 @@ def _create_tokens(user) -> TokenSchema:
         'type': 'refresh',
     }
 
-    return TokenSchema(
+    return users.schemas.TokenSchema(
         access=jwt.encode(access_payload, secret, algorithm='HS256'),
         refresh=jwt.encode(refresh_payload, secret, algorithm='HS256'),
     )
@@ -72,7 +56,7 @@ class LoginController(dmr.Controller[dmr.plugins.pydantic.PydanticSerializer]):
             ),
         ],
     )
-    def post(self, parsed_body: dmr.components.Body[LoginSchema]) -> TokenSchema:
+    def post(self, parsed_body: dmr.components.Body[users.schemas.LoginSchema]) -> users.schemas.TokenSchema:
         user = django.contrib.auth.authenticate(
             username=parsed_body.username,
             password=parsed_body.password,
@@ -99,7 +83,7 @@ class RegisterController(dmr.Controller[dmr.plugins.pydantic.PydanticSerializer]
             ),
         ],
     )
-    def post(self, parsed_body: dmr.components.Body[RegisterSchema]) -> TokenSchema:
+    def post(self, parsed_body: dmr.components.Body[users.schemas.RegisterSchema]) -> users.schemas.TokenSchema:
         if django.contrib.auth.models.User.objects.filter(username=parsed_body.username).exists():
             raise dmr.response.APIError(
                 {'detail': 'Пользователь уже существует.'},

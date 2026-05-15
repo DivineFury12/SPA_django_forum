@@ -76,7 +76,6 @@ async function loadTags() {
     const { data } = await getAllTags()
     tags.value = data
   } catch {
-    // tags are optional, fail silently
   }
 }
 
@@ -108,7 +107,7 @@ async function handleCreate() {
   formData.append('name', form.value.name)
   formData.append('description', form.value.description)
   if (codeFile.value) formData.append('code', codeFile.value)
-  selectedTags.value.forEach(id => formData.append('tag_ids', id))  // ← append each tag
+  selectedTags.value.forEach(id => formData.append('tag_ids', id))
 
   try {
     await createPost(formData)

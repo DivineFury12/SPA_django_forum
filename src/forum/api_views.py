@@ -5,36 +5,13 @@ import dmr
 import dmr.endpoint
 import dmr.plugins.pydantic
 import dmr.components
-import django.http
-import jwt
+import django.shortcuts
+
 
 import forum.models
 import forum.schemas
+import forum.utils
 
-
-def get_user_from_request(request):
-    """Decode JWT from Authorization header and return the User."""
-    auth_header = request.headers.get('Authorization', '')
-    if not auth_header.startswith('Bearer '):
-        return None
-
-    token = auth_header.split(' ')[1]
-    try:
-        payload = jwt.decode(
-            token,
-            django.conf.settings.SECRET_KEY,
-            algorithms=['HS256'],
-        )
-        return django.contrib.auth.models.User.objects.get(id=payload['user_id'])
-    except (jwt.ExpiredSignatureError, jwt.InvalidTokenError, django.contrib.auth.models.User.DoesNotExist):
-        return None
-
-
-class IsAuthorOrAdmin:
-    """Reusable permission check."""
-    @staticmethod
-    def check(request: django.http.HttpRequest, post: forum.models.Posts) -> bool:
-        return request.user.is_staff or post.author == request.user
 
 
 class TagListController(dmr.Controller[dmr.plugins.pydantic.PydanticSerializer]):
@@ -76,7 +53,7 @@ class PostListController(dmr.Controller[dmr.plugins.pydantic.PydanticSerializer]
         ],
     )
     def post(self) -> forum.schemas.PostSchema:
-        user = get_user_from_request(self.request)
+        user = forum.utils.get_user_from_request(self.request)
         if user is None:
             raise dmr.response.APIError(
                 {'detail': 'Authentication required.'},
@@ -157,7 +134,7 @@ class PostDetailController(dmr.Controller[dmr.plugins.pydantic.PydanticSerialize
     def patch(self) -> forum.schemas.PostSchema:
         post_id = self.kwargs.get('post_id')
 
-        user = get_user_from_request(self.request)
+        user = forum.utils.get_user_from_request(self.request)
         if user is None:
             raise dmr.response.APIError(
                 {'detail': 'Authentication required.'},
@@ -197,7 +174,7 @@ class PostDetailController(dmr.Controller[dmr.plugins.pydantic.PydanticSerialize
     def delete(self) -> None:
         post_id = self.kwargs.get('post_id')
 
-        user = get_user_from_request(self.request)
+        user = forum.utils.get_user_from_request(self.request)
         if user is None:
             raise dmr.response.APIError(
                 {'detail': 'Authentication required.'},
