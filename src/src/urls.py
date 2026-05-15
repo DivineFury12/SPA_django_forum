@@ -10,7 +10,7 @@ import forum.urls
 import users.urls
 import users.api_views
 
-# dmr API router — all Vue-facing endpoints go here
+# dmr API router
 router = dmr.routing.Router(
     'api/',
     [
@@ -26,9 +26,7 @@ urlpatterns = [
     django.urls.path('admin/',   django.contrib.admin.site.urls),
     django.urls.path('',         django.urls.include(homepage.urls)),
     django.urls.path('forum/',   django.urls.include(forum.urls)),
-    # django.urls.path('users/',   django.urls.include(users.urls)),
 
-    # API routes for Vue
     django.urls.path(router.prefix, django.urls.include((router.urls, 'api'), namespace='api')),
 
 ] + django.conf.urls.static.static(

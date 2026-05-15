@@ -12,7 +12,6 @@ function getPyodideReady() {
     return pyodideReadyPromise;
 }
 
-// Toggle the visibility of the new topic form
 function toggleForm() {
     const form = document.getElementById('new-topic-form');
     if (form) {
@@ -21,14 +20,13 @@ function toggleForm() {
     }
 }
 
-// Make toggleForm available for inline onclick handlers
 window.toggleForm = toggleForm;
 
 function attachPythonCodeValidation(form) {
     if (!form) return;
 
     form.addEventListener('submit', async function (event) {
-        event.preventDefault(); // stop native submit until validation finishes
+        event.preventDefault();
 
         const codeField = form.querySelector('#topic-code');
         if (!codeField) {
@@ -38,14 +36,12 @@ function attachPythonCodeValidation(form) {
 
         const value = codeField.value.trim();
 
-        // Required field
         if (!value) {
             alert('Пожалуйста, введите пример Python-кода.');
             codeField.focus();
             return;
         }
 
-        // Block HTML tags
         if (/<[^>]+>/.test(value)) {
             alert('Код не должен содержать HTML-теги. Оставьте только Python-код.');
             codeField.focus();
@@ -55,10 +51,8 @@ function attachPythonCodeValidation(form) {
         try {
             const pyodide = await getPyodideReady();
 
-            // Pass code safely into Python runtime
             pyodide.globals.set("code_to_check", value);
 
-            // Strict Python validation
             pyodide.runPython(`
                 import ast
                 
@@ -76,7 +70,6 @@ function attachPythonCodeValidation(form) {
                         raise ValueError("Введите настоящий Python-код, а не произвольный текст.")
                 `);
 
-            // All good — submit
             form.submit();
 
         } catch (err) {
@@ -86,7 +79,6 @@ function attachPythonCodeValidation(form) {
     });
 }
 
-// Initialize forms when the page loads
 document.addEventListener('DOMContentLoaded', function () {
     const inlineFormContainer = document.getElementById('new-topic-form');
     if (inlineFormContainer) {

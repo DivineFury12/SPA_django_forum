@@ -172,7 +172,7 @@ class PostDetailController(dmr.Controller[dmr.plugins.pydantic.PydanticSerialize
                 status_code=http.HTTPStatus.FORBIDDEN,
             )
 
-        body = json.loads(self.request.body)  # ← read JSON body directly
+        body = json.loads(self.request.body)
         name = body.get('name')
         description = body.get('description')
 

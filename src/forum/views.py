@@ -8,12 +8,12 @@ def forum(request):
     form = ForumPost()
 
     if request.method == 'POST':
-        form = ForumPost(request.POST, request.FILES)  # request.FILES for file upload
+        form = ForumPost(request.POST, request.FILES)
         if form.is_valid():
-            post = form.save(commit=False)  # don't save yet
-            post.author = request.user      # assign logged-in user as author
+            post = form.save(commit=False)
+            post.author = request.user
             post.save()
-            form.save_m2m()                 # save ManyToMany (tags) separately
+            form.save_m2m()
             return redirect('forum:forum')
 
     return render(request, 'forum/forum.html', {'form': form})

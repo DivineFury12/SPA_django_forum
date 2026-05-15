@@ -13,8 +13,8 @@ export const useAuthStore = defineStore('auth', {
   username:    localStorage.getItem('username')    || null,
   accessToken: localStorage.getItem('access_token') || null,
   isStaff:     localStorage.getItem('is_staff') === 'true',
-  nickname:    localStorage.getItem('nickname')    || null,  // ← add
-  avatar:      localStorage.getItem('avatar')      || null,  // ← add
+  nickname:    localStorage.getItem('nickname')    || null,
+  avatar:      localStorage.getItem('avatar')      || null,
 }),
 
 
@@ -38,16 +38,15 @@ export const useAuthStore = defineStore('auth', {
         localStorage.setItem('username', payload.username)
         localStorage.setItem('is_staff', payload.is_staff)
 
-        await this.fetchProfile()  // ← likely throws here
+        await this.fetchProfile()
       } catch (e) {
-        console.error('Login error:', e)        // ← check browser console
+        console.error('Login error:', e)
         console.error('Response:', e.response?.data)
-        throw e  // re-throw so LoginPage shows the error
+        throw e
   }
 
     },
 
-      // add fetchProfile action
     async fetchProfile() {
       try {
         const { data } = await getProfile()
@@ -58,10 +57,10 @@ export const useAuthStore = defineStore('auth', {
         localStorage.setItem('avatar',   data.avatar   || '')
       } catch (e) {
         console.error('fetchProfile failed:')
-        console.error('message:', e.message)        // ← actual error message
-        console.error('status:', e.response?.status) // ← HTTP status if any
+        console.error('message:', e.message)
+        console.error('status:', e.response?.status)
         console.error('data:', e.response?.data)
-        console.error('full error:', e)             // ← full object
+        console.error('full error:', e)
       }
     },
 
@@ -72,19 +71,16 @@ export const useAuthStore = defineStore('auth', {
 
     async logout() {
       try {
-        // Get CSRF token from cookie so Django accepts the POST
         const csrf = document.cookie
           .split('; ')
           .find(row => row.startsWith('csrftoken='))
           ?.split('=')[1]
 
-        // Clear Django session
         await api.post('/users/logout/', {}, {
           headers: { 'X-CSRFToken': csrf },
-          withCredentials: true,   // ← sends the sessionid cookie
+          withCredentials: true,
         })
       } catch {
-        // fail silently — JWT cleanup still happens below
       }
 
       this.accessToken = null

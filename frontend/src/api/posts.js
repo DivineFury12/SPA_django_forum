@@ -1,4 +1,3 @@
-// src/api/posts.js
 import api from './index'
 
 export const getAllPosts = () => api.get('/posts/')

@@ -13,8 +13,8 @@ class PostSchema(pydantic.BaseModel):
     description: str
     code: str
     author: str
-    author_nickname: str        # ← add
-    author_avatar: str | None # ← add
+    author_nickname: str
+    author_avatar: str | None
     tags: list[TagSchema]
     created_at: datetime.datetime
 
