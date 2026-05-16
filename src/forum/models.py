@@ -31,8 +31,8 @@ class Posts(ForumBaseModel):
     description = django.db.models.fields.TextField()
     code = django.db.models.FileField(upload_to='forum/code/')
     
-    objects = django.db.models.Manager()
-    raw = forum.managers.PostsManager()
+    objects = forum.managers.PostsManager()
+    all_objects = django.db.models.Manager()
     
     
     

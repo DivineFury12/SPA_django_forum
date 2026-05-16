@@ -24,7 +24,7 @@ class PostListController(dmr.Controller[dmr.plugins.pydantic.PydanticSerializer]
 
     def get(self) -> list[forum.schemas.PostSchema]:
         """List all posts."""
-        posts = forum.models.Posts.objects.select_related('author', 'author__profile').prefetch_related('tags').all()
+        posts = forum.models.Posts.objects.all_posts()
         return [
             forum.schemas.PostSchema(
                 id=p.id,
@@ -59,7 +59,7 @@ class PostListController(dmr.Controller[dmr.plugins.pydantic.PydanticSerializer]
                 {'detail': 'Authentication required.'},
                 status_code=http.HTTPStatus.UNAUTHORIZED,
             )
-
+        # https://docs.djangoproject.com/en/6.0/ref/request-response
         name = self.request.POST.get('name')
         description = self.request.POST.get('description')
         code_file = self.request.FILES.get('code')

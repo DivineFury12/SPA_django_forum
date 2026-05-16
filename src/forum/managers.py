@@ -6,34 +6,13 @@ class PostsManager(models.Manager):
 
     def all_posts(self):
         return (
-            self.select_related('author')
-            .order_by('-created_at')
-            .values(
-                'id',
-                'name',
-                'description',
-                'code',
-                'created_at',
-                'updated_at',
-                author=models.F('author__username')
-            )
+            self
+            .select_related('author', 'author__profile')
+            .prefetch_related('tags')
+            .all()
         )
+    
 
-    def get_post(self, post_id):
-        return (
-            self.select_related('author')
-            .filter(id=post_id)
-            .values(
-                'id',
-                'name',
-                'description',
-                'code',
-                'created_at',
-                'updated_at',
-                author=models.F('author__username')
-            )
-            .first()
-        )
 
     def create_post(self, name, description, code, author_id):
         post = self.create(

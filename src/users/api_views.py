@@ -1,9 +1,6 @@
-import datetime
 import json
 import http
-import io
 
-import django.http.multipartparser
 import dmr
 import dmr.endpoint
 import dmr.plugins.pydantic
@@ -12,34 +9,10 @@ import dmr.response
 import django.conf
 import django.contrib.auth
 import django.contrib.auth.models
-import jwt
 
 import users.schemas
-import forum.api_views
-
-
-def _create_tokens(user) -> users.schemas.TokenSchema:
-    """Create JWT access and refresh tokens manually using pyjwt."""
-    now = datetime.datetime.now(datetime.timezone.utc)
-    secret = django.conf.settings.SECRET_KEY
-
-    access_payload = {
-        'user_id': user.id,
-        'username': user.username,
-        'is_staff': user.is_staff,
-        'exp': now + datetime.timedelta(minutes=60),
-        'type': 'access',
-    }
-    refresh_payload = {
-        'user_id': user.id,
-        'exp': now + datetime.timedelta(days=7),
-        'type': 'refresh',
-    }
-
-    return users.schemas.TokenSchema(
-        access=jwt.encode(access_payload, secret, algorithm='HS256'),
-        refresh=jwt.encode(refresh_payload, secret, algorithm='HS256'),
-    )
+import users.utils
+import forum.utils
 
 
 class LoginController(dmr.Controller[dmr.plugins.pydantic.PydanticSerializer]):
@@ -66,7 +39,7 @@ class LoginController(dmr.Controller[dmr.plugins.pydantic.PydanticSerializer]):
                 {'detail': 'Invalid credentials.'},
                 status_code=http.HTTPStatus.UNAUTHORIZED,
             )
-        return _create_tokens(user)
+        return users.utils.create_tokens(user)
 
 
 class RegisterController(dmr.Controller[dmr.plugins.pydantic.PydanticSerializer]):
@@ -94,26 +67,10 @@ class RegisterController(dmr.Controller[dmr.plugins.pydantic.PydanticSerializer]
             username=parsed_body.username,
             password=parsed_body.password,
         )
-        return _create_tokens(user)
+        return users.utils.create_tokens(user)
 
 
 class ProfileController(dmr.Controller[dmr.plugins.pydantic.PydanticSerializer]):
-
-    def _get_or_create_profile(self, user):
-        profile, _ = users.models.Profile.objects.get_or_create(user=user)
-        return profile
-
-    def _parse_multipart(self):
-        """Manually parse multipart data since Django skips it for PATCH."""
-        body_file = io.BytesIO(self.request.body)
-        parser    = django.http.multipartparser.MultiPartParser(
-            self.request.META,
-            body_file,
-            self.request.upload_handlers,
-            self.request.encoding,
-        )
-        post_data, file_data = parser.parse()
-        return post_data, file_data
 
     @dmr.endpoint.modify(
         extra_responses=[
@@ -121,13 +78,13 @@ class ProfileController(dmr.Controller[dmr.plugins.pydantic.PydanticSerializer])
         ],
     )
     def get(self) -> users.schemas.ProfileSchema:
-        user = forum.api_views.get_user_from_request(self.request)
+        user = forum.utils.get_user_from_request(self.request)
         if user is None:
             raise dmr.response.APIError(
                 {'detail': 'Authentication required.'},
                 status_code=http.HTTPStatus.UNAUTHORIZED,
             )
-        profile = self._get_or_create_profile(user)
+        profile = users.utils.get_or_create_profile(user)
         return users.schemas.ProfileSchema(
             username=user.username,
             nickname=profile.nickname or '',
@@ -140,24 +97,24 @@ class ProfileController(dmr.Controller[dmr.plugins.pydantic.PydanticSerializer])
         ],
     )
     def patch(self) -> users.schemas.ProfileSchema:
-        user = forum.api_views.get_user_from_request(self.request)
+        user = forum.utils.get_user_from_request(self.request)
         if user is None:
             raise dmr.response.APIError(
                 {'detail': 'Authentication required.'},
                 status_code=http.HTTPStatus.UNAUTHORIZED,
             )
 
-        profile = self._get_or_create_profile(user)
+        profile = users.utils.get_or_create_profile(user)
 
         content_type = self.request.content_type or ''
         if 'multipart' in content_type:
-            post_data, file_data = self._parse_multipart()
+            post_data, file_data = users.utils.parse_multipart()
             nickname = post_data.get('nickname', profile.nickname)
             avatar   = file_data.get('avatar')
             if avatar:
                 profile.avatar = avatar
         else:
-            body     = json.loads(self.request.body)
+            body = json.loads(self.request.body)
             nickname = body.get('nickname', profile.nickname)
 
         profile.nickname = nickname
